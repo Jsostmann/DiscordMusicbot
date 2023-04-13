@@ -107,7 +107,7 @@ async def skip(ctx):
     if voice_client.is_paused():
         voice_client.resume()
     else:
-        await ctx.send("The bot was not playing anything before this. Use play_song command")
+        await ctx.send("The bot was not playing anything before this. Use play command")
 
 
 @bot.command(name='resume', help='Resumes the song')
@@ -137,7 +137,6 @@ async def stop(ctx):
         await ctx.send("The bot is not playing anything at the moment.")
 
 
-
 @bot.command(name='volume', help='Tells the bot to set its volume')
 async def volume(ctx, *args):
     voice_client = ctx.message.guild.voice_client
@@ -156,6 +155,9 @@ async def volume(ctx, *args):
     else:
         await ctx.send("The bot is not in a voice channel")
 
+
+
+
 @bot.event
 async def on_ready():
     global GUILD
@@ -166,7 +168,6 @@ async def on_ready():
         for channel in guild.text_channels :
             if str(channel) == "general" :
                 await channel.send('Bot Activated..')
-                await channel.send(file=discord.File('giphy.png'))
         print('Active in {}\n Member Count : {}'.format(guild.name,guild.member_count))
 
 
@@ -177,8 +178,6 @@ async def where_am_i(ctx):
     memberCount = str(ctx.guild.member_count)
     desc=ctx.guild.description
 
-    
-    
     embed = discord.Embed(
         title=ctx.guild.name + " Server Information",
         description=desc,
