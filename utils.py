@@ -13,7 +13,7 @@ YT_DL_OPTIONS = {
     'default_search': 'auto',
 }
 
-SONG_ATTRIBUTES = ["title", "requestee", "url", "duration", "thumbnail", "channel"]
+SONG_ATTRIBUTES = ["title", "requestee", "url", "webpage_url", "duration", "thumbnail", "channel"]
 
 
 def search_youtube(title):

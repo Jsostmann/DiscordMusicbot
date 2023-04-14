@@ -14,7 +14,7 @@ class Song:
         duration = utils.format_duration(self.get_value("duration"))
         song_title = self.get_value("title")
         thumbnail = self.get_value("thumbnail")
-        song_url = self.get_value("url")
+        song_url = self.get_value("webpage_url")
         channel = self.get_value("channel")
 
 

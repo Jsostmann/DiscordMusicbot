@@ -4,10 +4,11 @@ import utils
 
 class Playlist:
   
-    def __init__(self):
+    def __init__(self, guild):
         self.playlist = deque()
         self.history = deque()
         self.audit_log = list()
+        self.guild = guild
 
     def add(self, song):        
         self.playlist.append(song)
@@ -23,7 +24,7 @@ class Playlist:
         return len(self.playlist) == 0
     
     def skip(self):
-        prev = self.playlist.popleft()
+        prev = self.next()
         self.history.append(prev)
         self.audit_log.append(prev)
 
@@ -61,9 +62,9 @@ class Playlist:
         description = self.get_playlist_description()
 
         if not description:
-            return discord.Embed(title="Yeaaaa Boiiii Playlist", description="No songs in the Playlist", color=discord.Color.blue())
+            return discord.Embed(title=str(self.guild) + " playlist", description="No songs in the Playlist", color=discord.Color.blue())
 
-        embed = discord.Embed(title="Yeaaaa Boiiii Playlist", description=description, color=discord.Color.blue())
+        embed = discord.Embed(title=str(self.guild) + " playlist", description=description, color=discord.Color.blue())
         return embed
     
 
