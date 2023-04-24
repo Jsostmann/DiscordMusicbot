@@ -1,3 +1,4 @@
 .env
 *.exe
 __pycache__/
+.cache/

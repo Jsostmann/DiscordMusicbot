@@ -7,14 +7,23 @@ class Playlist:
     def __init__(self, guild):
         self.playlist = deque()
         self.history = deque()
-        self.audit_log = list()
         self.guild = guild
+        self.loop = False
 
     def add(self, song):        
         self.playlist.append(song)
     
     def next(self):
-        return self.playlist.popleft()
+        if self.is_empty():
+            return None
+        
+        if not self.loop:
+            self.history.append(self.playlist.popleft())
+        
+        if self.is_empty():
+            return None
+
+        return self.playlist[0]
 
     def prev(self):
         if len(self.history) != 0:
@@ -26,7 +35,6 @@ class Playlist:
     def skip(self):
         prev = self.next()
         self.history.append(prev)
-        self.audit_log.append(prev)
 
     def clear(self):
         self.playlist.clear()
@@ -52,7 +60,7 @@ class Playlist:
         description_str = ""
         for i in range(0, len(self.playlist)):
             song_content = self.playlist[i].get_playlist_format()
-            song_str = "`{}.` {} | `{} requested by: {}`\n\n".format(str(i + 1), song_content[0], utils.format_duration(song_content[1]), song_content[2])
+            song_str = "`{}.` {} | `{} requested by: {}`\n\n".format(str(i), song_content[0], utils.format_duration(song_content[1]), song_content[2])
             description_str += song_str
 
         description_str += "\n\n" + self.get_footer()

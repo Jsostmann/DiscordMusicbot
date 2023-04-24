@@ -2,8 +2,21 @@ import utils
 import discord
 
 class Song:
+
+    SONG_ATTRIBUTES = ["title", "requestee", "url", "webpage_url", "duration", "thumbnail", "channel"]
+
     def __init__(self, raw_map):
-        self.song_map = Song.parse_song(raw_map)
+        if raw_map:
+            self.song_map = Song.parse_song(raw_map)
+        else:
+            self.song_map = {}
+            
+    def set_value(self, key, value):
+        if key in Song.SONG_ATTRIBUTES:
+            self.song_map[key] = value
+
+    def set_song_map(self, song_map):
+        self.song_map = song_map
 
     def get_value(self, value):
         if value in self.song_map:
@@ -37,7 +50,7 @@ class Song:
     @classmethod
     def parse_song(cls, raw_map):
         attrib_map = {}
-        for attrib in utils.SONG_ATTRIBUTES:
+        for attrib in Song.SONG_ATTRIBUTES:
             if attrib in raw_map:
                 attrib_map[attrib] = raw_map[attrib]
 

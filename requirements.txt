@@ -1,7 +1,6 @@
-discord==1.0.1
-discord.py==1.6.0
-python-dotenv==0.15.0
-youtube-dl==2021.2.10
+discord
+discord.py[voice]
+spotipy
+python-dotenv
 PyNaCl
-py-cord[voice]
 yt-dlp
