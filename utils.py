@@ -6,7 +6,14 @@ from dotenv import load_dotenv
 
 
 SPOTIFY_PLAYLIST_REGEX = re.compile(r'https://open.spotify.com/playlist/(\w*)')
-SPOTIFY__TRACK_REGEX = re.compile(r'https://open.spotify.com/track/(\w*)')
+SPOTIFY_TRACK_REGEX = re.compile(r'https://open.spotify.com/track/(\w*)')
+SPOTIFY_ALBUM_REGEX = re.compile(r'https://open.spotify.com/album/(\w*)')
+
+class Spotify:
+    UNKNOWN = "UNKNOWN"
+    PLAYLIST = "PLAYLIST"
+    TRACK = "TRACK"
+    ALBUM = "ALBUM"
 
 load_dotenv()
 
@@ -20,6 +27,11 @@ YT_DL_OPTIONS = {
     'quiet': True,
     'no_warnings': True,
     'default_search': 'auto',
+    'postprocessors': [{
+        'key': 'FFmpegExtractAudio',
+        'preferredcodec': 'mp3',
+        'preferredquality': '192',
+    }]
 }
 
 spotify_client = None
@@ -36,15 +48,46 @@ def spotify_enabled():
     return spotify_enabled
 
 def is_spotify_input(input):
-    return "spotify.com" in input
+    if not "spotify.com" in input:
+        return Spotify.UNKNOWN
+    
+    if Spotify.TRACK.lower() in input:
+        return Spotify.TRACK
 
-def get_spotify_tracks(input):
-    playlist_id = SPOTIFY_PLAYLIST_REGEX.search(input)
+    if Spotify.ALBUM.lower() in input:
+        return Spotify.ALBUM
+
+    if Spotify.PLAYLIST.lower() in input:
+        return Spotify.PLAYLIST
+    
+    return Spotify.UNKNOWN
+
+def get_spotify_album(input):
+    album_id = get_spotify_media_id(input, SPOTIFY_ALBUM_REGEX)
+
+    if not album_id:
+        return None
+    
+    album = spotify_client.album_tracks(album_id=album_id)
+
+    return ["{}, {}".format(track['name'], track['artists'][0]['name']) for track in album['items']]
+    
+def get_spotify_track(input):
+    track_id = get_spotify_media_id(input, SPOTIFY_TRACK_REGEX)
+
+    if not track_id:
+        return None
+    
+    track = spotify_client.track(track_id=track_id)
+
+    return ["{}, {}".format(track['name'], track['artists'][0]['name'])]
+    
+def get_spotify_playlist(input):
+    playlist_id = get_spotify_media_id(input, SPOTIFY_PLAYLIST_REGEX)
 
     if not playlist_id:
-        return False
+        return None
     
-    playlist_id = playlist_id.group(0)
     tracks = spotify_client.playlist_tracks(playlist_id=playlist_id, fields="items(track(name, artists(name)))")
 
     if not tracks:
@@ -52,9 +95,25 @@ def get_spotify_tracks(input):
     
     tracks = tracks["items"]
 
-    return [track['track']['name'] for track in tracks]
+    return ["{}, {}".format(track['track']['name'], track['track']['artists'][0]['name']) for track in tracks]
 
+def get_spotify_media_id(input, media_regex):
+    media_id = media_regex.search(input)
 
+    if not media_id:
+        return None
+    
+    return media_id.group(0)
+
+def get_spotify_input(input, spotify_type):
+    match spotify_type:
+        case Spotify.TRACK:
+            return get_spotify_track(input)
+        case Spotify.ALBUM:
+            return get_spotify_album(input)
+        case Spotify.PLAYLIST:
+            return get_spotify_playlist(input)
+    
 def search_youtube(title):
     
     # If URL is provided return

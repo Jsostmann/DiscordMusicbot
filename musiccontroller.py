@@ -4,6 +4,8 @@ import utils
 from song import Song
 import asyncio
 import concurrent.futures
+#        #await asyncio.ensure_future(self.load(track, author))
+#             await asyncio.ensure_future(self.load(self.playlist.playlist[i], self.playlist.playlist[i].get_value("requestee")))
 
 class MusicController:
     
@@ -14,14 +16,15 @@ class MusicController:
         return cls.GUILD_MUSIC_CONTROLERS[guild_id]
 
     @classmethod
-    async def register_guild(cls, guild_id):
-        cls.GUILD_MUSIC_CONTROLERS[guild_id] = MusicController(guild_id)
+    async def register_guild(cls, guild_id, bot):
+        cls.GUILD_MUSIC_CONTROLERS[guild_id] = MusicController(guild_id, bot)
 
 
-    def __init__(self, guild):
+    def __init__(self, guild, bot):
         self.playlist = Playlist(guild)
         self.guild = guild
         self.current_song = None
+        self.bot = bot
 
     def next_song_cb(self, error):
         if not self.is_connected():
@@ -31,44 +34,48 @@ class MusicController:
 
         if not self.current_song:
             return
-        ##TODO PREELOAD
+        
         self.process_song()
 
+    async def play_spotify(self, input, author):
+        media_type = utils.is_spotify_input(input)
 
-    async def do_spotify(self, input, author):
-        track_names = utils.get_spotify_tracks(input)
+        if media_type == utils.Spotify.UNKNOWN:
+            return None
+        
+        track_names = utils.get_spotify_input(input, media_type)
         
         for track in track_names:
-            await asyncio.ensure_future(self.load(track, author))
-        return None
-
-    async def do_youtube(self, input, author):
-        await asyncio.ensure_future(self.load(input, author))
-        return None
-
-    async def play_song(self, input, author):
-        if utils.is_spotify_input(input):
-            await self.do_spotify(input, author)
-        else:
-            await self.do_youtube(input, author)
-
-    async def load(self, track, author):
-
-        def download(track):
-            youtube_url = utils.search_youtube(track)
-            youtube_song = utils.create_youtube_song(youtube_url, author)
-            song = Song(youtube_song)
+            song_url = await self.bot.loop.run_in_executor(None, utils.search_youtube, track)
+            song_map = await self.bot.loop.run_in_executor(None, utils.create_youtube_song, song_url, author)
+            song = Song(song_map)
             self.process_song_outer(song)
+
+    async def play_youtube(self, input, author):
+        song_url = utils.search_youtube(input)
+        song_map = utils.create_youtube_song(song_url, author)
+        song = Song(song_map)
+        self.process_song_outer(song)
+
+    async def load(self, song: Song, author):
+
+        if song.is_loaded():
+            return
+        
+        def download(song):
+            youtube_url = utils.search_youtube(song.get_value("title"))
+            youtube_song = utils.create_youtube_song(youtube_url, author)
+            song.set_song_map(youtube_song)
+            song.set_loaded(True)
 
         loop = asyncio.get_event_loop()
         executor = concurrent.futures.ThreadPoolExecutor(max_workers=1)
-        await asyncio.wait(fs={loop.run_in_executor(executor, download, track)}, return_when=asyncio.ALL_COMPLETED)
-        
+        fin, pen = await asyncio.wait(fs={loop.run_in_executor(executor, download, song)}, return_when=asyncio.FIRST_COMPLETED)
+        #return fin.pop().result()
 
     def process_song_outer(self, song):
         self.playlist.add(song)
 
-        #TODO PRELOAD
         if not self.current_song:
             self.current_song = song
 
@@ -76,7 +83,7 @@ class MusicController:
 
     def process_song(self):
         #play song requested if no song is being played and the queue is empty
-        if not self.is_playing() and self.current_song:
+        if self.is_connected() and not self.is_playing() and self.current_song:        
             self.guild.voice_client.play(discord.FFmpegPCMAudio(self.current_song.get_value('url'), before_options='-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5'), after=self.next_song_cb)
             self.guild.voice_client.source = discord.PCMVolumeTransformer(self.guild.voice_client.source)
 

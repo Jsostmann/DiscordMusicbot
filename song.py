@@ -10,13 +10,13 @@ class Song:
             self.song_map = Song.parse_song(raw_map)
         else:
             self.song_map = {}
-            
+
     def set_value(self, key, value):
         if key in Song.SONG_ATTRIBUTES:
             self.song_map[key] = value
 
     def set_song_map(self, song_map):
-        self.song_map = song_map
+        self.song_map = Song.parse_song(song_map)
 
     def get_value(self, value):
         if value in self.song_map:
