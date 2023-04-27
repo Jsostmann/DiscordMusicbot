@@ -100,7 +100,7 @@ async def song(ctx):
         return
     
     await ctx.send("The bot is not playing anything")
-    
+
 
 @bot.command(name='leave', help='Tells the bot to leave its voice channel',aliases=['l'])
 async def leave(ctx):

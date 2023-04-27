@@ -5,7 +5,7 @@ from song import Song
 import asyncio
 import concurrent.futures
 #        #await asyncio.ensure_future(self.load(track, author))
-#             await asyncio.ensure_future(self.load(self.playlist.playlist[i], self.playlist.playlist[i].get_value("requestee")))
+#         await asyncio.ensure_future(self.load(self.playlist.playlist[i], self.playlist.playlist[i].get_value("requestee")))
 
 class MusicController:
     
@@ -71,7 +71,6 @@ class MusicController:
         loop = asyncio.get_event_loop()
         executor = concurrent.futures.ThreadPoolExecutor(max_workers=1)
         fin, pen = await asyncio.wait(fs={loop.run_in_executor(executor, download, song)}, return_when=asyncio.FIRST_COMPLETED)
-        #return fin.pop().result()
 
     def process_song_outer(self, song):
         self.playlist.add(song)
