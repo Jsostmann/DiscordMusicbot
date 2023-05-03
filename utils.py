@@ -6,11 +6,13 @@ import httpx
 from dotenv import load_dotenv
 
 
+load_dotenv()
+
 SPOTIFY_PLAYLIST_REGEX = re.compile(r'https://open.spotify.com/playlist/(\w*)')
 SPOTIFY_TRACK_REGEX = re.compile(r'https://open.spotify.com/track/(\w*)')
 SPOTIFY_ALBUM_REGEX = re.compile(r'https://open.spotify.com/album/(\w*)')
 
-DISCORD_APPLICATION_ID = '1095524670054334566'
+DISCORD_APPLICATION_ID = os.getenv("discord_application_id")
 DISCORD_URL = "https://discordapp.com/api/oauth2/applications/{}/assets"
 DISCORD_ASSET_URL = "https://cdn.discordapp.com/app-assets/{}/{}.png?size={}"
 
@@ -19,8 +21,6 @@ class Spotify:
     PLAYLIST = "PLAYLIST"
     TRACK = "TRACK"
     ALBUM = "ALBUM"
-
-load_dotenv()
 
 YT_DL_OPTIONS = {
     'format': 'bestaudio/best',
@@ -165,7 +165,7 @@ def format_date(date_str):
     date_str = str(date_str)
     if not len(date_str) == 8:
         return None
-    return "{}-{}-{}".format(date_str[:4], date_str[4:6], date_str[6:8])
+    return "{}-{}-{}".format(date_str[4:6], date_str[6:8], date_str[:4])
 
 def get_image_asset(asset_name, size):
     return asset_map[asset_name][size]

@@ -21,12 +21,11 @@ class Song:
     def get_value(self, value) -> any:
         if value in self.song_map:
             return self.song_map[value]
-    #todo
+        
     def get_embed(self, pos=None, current_time=None, type=["playlist", "song", "detailed"]):
         if type == "playlist":
             return self.get_playlist_format()
         
-
         author = self.get_value("requestee").avatar
         duration = utils.format_duration(self.get_value("duration"))
         song_title = self.get_value("title")
