@@ -4,29 +4,23 @@ import utils
 from song import Song
 import asyncio
 import concurrent.futures
-#        #await asyncio.ensure_future(self.load(track, author))
-#         await asyncio.ensure_future(self.load(self.playlist.playlist[i], self.playlist.playlist[i].get_value("requestee")))
+import random
+from songtimer import Songtimer
 
 class MusicController:
     
-    GUILD_MUSIC_CONTROLERS = {}
-
-    @classmethod
-    def get_music_controller(cls, guild_id):
-        return cls.GUILD_MUSIC_CONTROLERS[guild_id]
-
-    @classmethod
-    async def register_guild(cls, guild_id, bot):
-        cls.GUILD_MUSIC_CONTROLERS[guild_id] = MusicController(guild_id, bot)
-
-
     def __init__(self, guild, bot):
+        self.bot = bot
         self.playlist = Playlist(guild)
+        self.song_timer = Songtimer()
         self.guild = guild
         self.current_song = None
-        self.bot = bot
+        self.volume = 100
 
-    def next_song_cb(self, error):
+    def next_song_cb(self, error) -> None:
+
+        self.song_timer.stop()
+
         if not self.is_connected():
             return
         
@@ -52,8 +46,8 @@ class MusicController:
             self.process_song_outer(song)
 
     async def play_youtube(self, input, author):
-        song_url = utils.search_youtube(input)
-        song_map = utils.create_youtube_song(song_url, author)
+        song_url = await self.bot.loop.run_in_executor(None, utils.search_youtube, input)
+        song_map = await self.bot.loop.run_in_executor(None, utils.create_youtube_song, song_url, author)
         song = Song(song_map)
         self.process_song_outer(song)
 
@@ -84,7 +78,23 @@ class MusicController:
         #play song requested if no song is being played and the queue is empty
         if self.is_connected() and not self.is_playing() and self.current_song:        
             self.guild.voice_client.play(discord.FFmpegPCMAudio(self.current_song.get_value('url'), before_options='-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5'), after=self.next_song_cb)
-            self.guild.voice_client.source = discord.PCMVolumeTransformer(self.guild.voice_client.source)
+            self.guild.voice_client.source = discord.PCMVolumeTransformer(self.guild.voice_client.source, self.volume / 100.0)
+            self.song_timer.start()
+
+    async def get_current_song(self):
+        play_time = self.song_timer.get_time()
+        return self.current_song.get_embed(0, play_time)
+
+    def playlist_is_empty(self):
+        return self.playlist.is_empty()
+
+    def get_playlist_size(self):
+        return self.playlist.get_size()
+    
+    async def shuffle_playlist(self):
+        for i in range(1, self.playlist.get_size()):
+            swap_index = random.randrange(1, self.playlist.get_size())
+            self.playlist.playlist[i], self.playlist.playlist[swap_index] = self.playlist.playlist[swap_index], self.playlist.playlist[i]
 
     async def loop_song(self):
         self.playlist.loop = True if not self.playlist.loop else False
@@ -120,17 +130,19 @@ class MusicController:
     
     def set_volume(self, new_volume):
         if new_volume >= 0 and new_volume <= 100:
-            new_volume = float(new_volume) / 100.0
-            self.guild.voice_client.source.volume = new_volume
+            self.volume = float(new_volume) / 100.0
+            self.guild.voice_client.source.volume = self.volume
             return True
         
         return False
 
     def pause(self):
         self.guild.voice_client.pause()
+        self.song_timer.pause()
 
     def resume(self):
         self.guild.voice_client.resume()
+        self.song_timer.resume()
     
     def is_paused(self):
         return self.is_connected() and self.guild.voice_client.is_paused()

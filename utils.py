@@ -2,12 +2,17 @@ import yt_dlp as yt_dl
 import re
 import spotipy
 import os
+import httpx
 from dotenv import load_dotenv
 
 
 SPOTIFY_PLAYLIST_REGEX = re.compile(r'https://open.spotify.com/playlist/(\w*)')
 SPOTIFY_TRACK_REGEX = re.compile(r'https://open.spotify.com/track/(\w*)')
 SPOTIFY_ALBUM_REGEX = re.compile(r'https://open.spotify.com/album/(\w*)')
+
+DISCORD_APPLICATION_ID = '1095524670054334566'
+DISCORD_URL = "https://discordapp.com/api/oauth2/applications/{}/assets"
+DISCORD_ASSET_URL = "https://cdn.discordapp.com/app-assets/{}/{}.png?size={}"
 
 class Spotify:
     UNKNOWN = "UNKNOWN"
@@ -26,15 +31,11 @@ YT_DL_OPTIONS = {
     'logtostderr': False,
     'quiet': True,
     'no_warnings': True,
-    'default_search': 'auto',
-    'postprocessors': [{
-        'key': 'FFmpegExtractAudio',
-        'preferredcodec': 'mp3',
-        'preferredquality': '192',
-    }]
+    'default_search': 'auto'
 }
 
 spotify_client = None
+global asset_map
 
 try:
     spotify_client_id = os.getenv("spotify_client_id")
@@ -159,3 +160,20 @@ def format_duration(duration):
         seconds = "0" + seconds
 
     return "{}:{}".format(mins, seconds)
+
+def get_image_asset(asset_name, size):
+    return asset_map[asset_name][size]
+
+async def create_image_assets():
+    global asset_map
+    asset_map = {}
+    async with httpx.AsyncClient() as client:
+        assets = await client.get(DISCORD_URL.format(DISCORD_APPLICATION_ID))
+        for asset in assets.json():
+            asset_map[asset['name']] = tuple(DISCORD_ASSET_URL.format(DISCORD_APPLICATION_ID, asset['id'], size) for size in [40, 128, 512])
+
+def get_emoji_files():
+    return os.listdir(os.path.join(os.getcwd(), "assets", "emojis"))
+
+def get_emoji_file(emoji_file_name):
+    return os.path.join(os.getcwd(), "assets", "emojis", emoji_file_name)
