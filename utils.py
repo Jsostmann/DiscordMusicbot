@@ -161,6 +161,12 @@ def format_duration(duration):
 
     return "{}:{}".format(mins, seconds)
 
+def format_date(date_str):
+    date_str = str(date_str)
+    if not len(date_str) == 8:
+        return None
+    return "{}-{}-{}".format(date_str[:4], date_str[4:6], date_str[6:8])
+
 def get_image_asset(asset_name, size):
     return asset_map[asset_name][size]
 

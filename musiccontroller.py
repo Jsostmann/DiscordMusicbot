@@ -83,7 +83,7 @@ class MusicController:
 
     async def get_current_song(self):
         play_time = self.song_timer.get_time()
-        return self.current_song.get_embed(0, play_time)
+        return self.current_song.get_embed(0, play_time, "detailed")
 
     def playlist_is_empty(self):
         return self.playlist.is_empty()

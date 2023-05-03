@@ -59,8 +59,8 @@ class Playlist:
 
         description_str = ""
         for i in range(0, len(self.playlist)):
-            song_content = self.playlist[i].get_playlist_format()
-            song_str = "`{}.` {} | `{} requested by: {}`\n\n".format(str(i), song_content[0], utils.format_duration(song_content[1]), song_content[2])
+            song_content = self.playlist[i].get_embed(type="playlist")
+            song_str = "`{}.` [{}]({}) | `{} requested by: {}`\n\n".format(str(i), song_content[0], song_content[1], utils.format_duration(song_content[2]), song_content[3])
             description_str += song_str
 
         description_str += "\n\n" + self.get_footer()
