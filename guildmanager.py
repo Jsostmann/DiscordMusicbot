@@ -1,6 +1,10 @@
 from __future__ import annotations
-from musiccontroller import MusicController
-from settingscontroller import SettingsController
+
+import sys
+sys.dont_write_bytecode = True
+
+from controllers.musiccontroller import MusicController
+from controllers.settingscontroller import SettingsController
 import utils
 
 class GuildManager:

@@ -1,11 +1,14 @@
+import sys
+sys.dont_write_bytecode = True
+
 import yt_dlp as yt_dl
 import re
-import spotipy
+from spotipy import Spotify as SpotifyClient, CacheFileHandler
+from spotipy.oauth2 import SpotifyClientCredentials
 import os
 import httpx
 import discord
 from dotenv import load_dotenv
-
 
 load_dotenv()
 
@@ -42,7 +45,10 @@ emoji_map = {}
 try:
     spotify_client_id = os.getenv("spotify_client_id")
     spotify_client_secret = os.getenv("spotify_client_secret")
-    spotify_client = spotipy.Spotify(auth_manager=spotipy.oauth2.SpotifyClientCredentials(spotify_client_id, client_secret=spotify_client_secret))
+    spotify_cache_location = os.path.join(os.getcwd() + "config")
+    spotify_client = SpotifyClient(auth_manager=SpotifyClientCredentials(spotify_client_id, 
+                                                                   client_secret=spotify_client_secret,
+                                                                   cache_handler=CacheFileHandler(spotify_cache_location)))
     spotify_enabled = True
 except:
     spotify_enabled = False
