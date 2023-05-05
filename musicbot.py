@@ -3,7 +3,6 @@ from discord.ext import commands, tasks
 import os
 from dotenv import load_dotenv
 import utils
-from musiccontroller import MusicController
 from guildmanager import GuildManager
 
 load_dotenv()
@@ -11,6 +10,7 @@ DISCORD_TOKEN = os.getenv("discord_token")
 
 intents = discord.Intents().all()
 bot = commands.Bot(command_prefix='-', intents=intents)
+
 
 @bot.command(name='play', help='Play a song')
 async def play(ctx, *, input):
@@ -26,16 +26,16 @@ async def play(ctx, *, input):
         media_type = utils.is_spotify_input(input)
         if not media_type == utils.Spotify.UNKNOWN:
             if not utils.spotify_enabled():            
-                await ctx.send("<:spotify_emoji:1101667554365296650> The bot is not setup to use spotify")
+                await ctx.send(f"{utils.emoji_map['spotify_emoji']} The bot is not setup to use spotify")
                 return
             
-            await music_controller.play_spotify(input, author)
-            await ctx.send("Playing spotify playlist :scroll:")
-
+            t = music_controller.play_spotify(input, author)
+            await ctx.send(f"Playing spotify playlist {utils.emoji_map['playlist']}")
+            await t
         else:
-            await music_controller.play_youtube(input, author)
-            await ctx.send("<:youtube_emoji:1101680952985518081> Playing youtube song")
-            #await ctx.send(embed=song.get_embed(music_controller.playlist.get_size()))
+            song = await music_controller.play_youtube(input, author)
+            await ctx.send(f"{utils.emoji_map['youtube_emoji']} Playing youtube song")
+            await ctx.send(embed=song.get_embed(pos=music_controller.playlist.get_size(),type="song"))
 
     except Exception as e:
         await ctx.send("Error playing song")
@@ -60,7 +60,7 @@ async def pause(ctx):
 
     if music_controller.is_playing():
         music_controller.pause()
-        await ctx.send("<:pause:1102743418037346415> Paused Song")
+        await ctx.send(embed=discord.Embed(description="**:pause_button: Paused Song**"))
         return
     await ctx.send("The bot is not playing anything at the moment.")
     
@@ -78,7 +78,7 @@ async def skip(ctx):
 
     if music_controller.is_playing():
         await music_controller.skip_song()
-        await ctx.send("Skipped Song <:skip:1102743429517156442>")
+        await ctx.send(embed=discord.Embed(description="**Skipped Song :track_next:**"))
         return
     
     await ctx.send("No song is playing to skip")
@@ -88,11 +88,9 @@ async def skip(ctx):
 async def resume(ctx):
     music_controller = GuildManager.get_manager(ctx.guild).get_music_controller()
 
-    if music_controller.is_paused():
+    if music_controller.can_resume():
         music_controller.resume()
-        await ctx.send("<:play:1102743419014615060> Resumed Song")
-        embed = discord.Embed(description="<:play:1102743419014615060> Resumed Song")
-
+        embed = discord.Embed(description="**:arrow_forward: Resumed Song**")
         await ctx.send(embed=embed)
         return
     
@@ -119,14 +117,15 @@ async def shuffle(ctx):
         return
     
     if music_controller.get_playlist_size() < 3:
-        await ctx.send("Cant shuffle, only {} song in playlist".format(music_controller.get_playlist_size()))
+        await ctx.send(f"Cant shuffle, only {music_controller.get_playlist_size()} song in playlist")
         return
 
     await music_controller.shuffle_playlist()
-    await ctx.send("Shuffled playlist :twisted_rightwards_arrows:")
+    embed = discord.Embed(description="**Shuffled playlist :twisted_rightwards_arrows:**")
+    await ctx.send(embed=embed)
 
 
-@bot.command(name='leave', help='Tells the bot to leave its voice channel',aliases=['l'])
+@bot.command(name='leave', help='Tells the bot to leave its voice channel', aliases=['l'])
 async def leave(ctx):
     music_controller = GuildManager.get_manager(ctx.guild).get_music_controller()
 
@@ -137,7 +136,7 @@ async def leave(ctx):
         await ctx.send("The bot is not connected to a voice channel.")
 
 
-@bot.command(name='stop', help='Tells the bot to stop the current song',aliases=['st'])
+@bot.command(name='stop', help='Tells the bot to stop the current song', aliases=['st'])
 async def stop(ctx):
     music_controller = GuildManager.get_manager(ctx.guild).get_music_controller()
 
@@ -147,17 +146,40 @@ async def stop(ctx):
     
     await ctx.send("The bot is not playing anything at the moment.")
 
-@bot.command(name='loop', help='Tells the bot to loop the current song')
-async def loop(ctx):
+
+@bot.command(name='loop_song', help='Tells the bot to loop the current song', aliases=['ls'])
+async def loop_song(ctx):
     music_controller = GuildManager.get_manager(ctx.guild).get_music_controller()
  
-    if music_controller.is_playing():
-        await music_controller.loop_song()
+    if not music_controller.is_playing():
+        await ctx.send("The bot is not playing anything at the moment, cannot loop song")
         return
-    await ctx.send("The bot is not playing anything at the moment, cannot loop")
+    
+    if not music_controller.is_song_looping():
+        await ctx.send(embed=discord.Embed(description="**Loop song enabled :repeat:**"))
+    else:
+        await ctx.send(embed=discord.Embed(description="**Loop song disabled :white_check_mark:**"))
+
+    await music_controller.loop_song()
 
 
-@bot.command(name='volume', help='Tells the bot to set its volume',aliases=['v'])
+@bot.command(name='loop_playlist', help='Tells the bot to loop the playlist', aliases=['lp'])
+async def loops(ctx):
+    music_controller = GuildManager.get_manager(ctx.guild).get_music_controller()
+ 
+    if not music_controller.is_playing():
+        await ctx.send("The bot is not playing anything at the moment, cannot loop playlist")
+        return
+    
+    if not music_controller.is_playlist_looping():
+        await ctx.send(embed=discord.Embed(description="**Loop playlist enabled :repeat:**"))
+    else:
+        await ctx.send(embed=discord.Embed(description="**Looping playlist disabled :white_check_mark:**"))
+
+    await music_controller.loop_playlist()
+
+
+@bot.command(name='volume', help='Tells the bot to set its volume', aliases=['v'])
 async def volume(ctx, *args):
     music_controller = GuildManager.get_manager(ctx.guild).get_music_controller()
 
@@ -170,14 +192,14 @@ async def volume(ctx, *args):
         return
     try:  
         if len(args) == 0:         
-            await ctx.send("Bots current volume :speaker: {}%".format(music_controller.get_volume()))
+            await ctx.send(embed=discord.Embed(description=f"**Bots current volume :speaker: {music_controller.get_volume()}%**"))
             return
         
         new_volume = int(args[0])
         success = music_controller.set_volume(new_volume)
 
         if success:
-            await ctx.send("Set the bot's volume to :sound: {}%".format(music_controller.get_volume()))
+            await ctx.send(embed=discord.Embed(description=f"**Set the bot's volume to :sound: {music_controller.get_volume()}%**"))
             return
 
         await ctx.send("Please enter a value between [0,100]")
@@ -185,55 +207,20 @@ async def volume(ctx, *args):
     except Exception as e:
         await ctx.send("Failed to set / get bot volume")
         print(e)
+        print(type(e).__name__)
 
-
-@bot.command(name='emoji', help='Gets custom emojis',aliases=['e'])
-async def emoji(ctx):
-    found_emojis = ctx.guild.emojis
-
-    for emoji in found_emojis:
-        print(emoji)
-        '''
-        
-        file = discord.File(utils.get_emoji_file("cd_spin_emoji.GIF"), filename="output.gif")
-        print(file.filename)      
-        embed = discord.Embed(title="TEST")
-        embed.set_author(name="Resumed", icon_url="attachment://output.gif")
-        await ctx.send(embed=embed, file=file)
-
-        file = discord.File(utils.get_emoji_file("spotify_emoji.png"), filename="spotify_emoji.png")       
-        embed = discord.Embed(title="TEST")
-        embed.set_author(name="Added to the Playlist", icon_url="attachment://spotify_emoji.png")
-        embed.set_thumbnail(url="attachment://spotify_emoji.png")
-        await ctx.send(embed=embed, file=file)
-        '''
-            
-async def create_emojis(guild: discord.Guild):
-    emjoi_files = utils.get_emoji_files()
-
-    for emoji_file in emjoi_files:
-        emoji_name = emoji_file.split('.')[0]
-        found_emoji = discord.utils.get(guild.emojis, name=emoji_name)
-        if not found_emoji:
-            emoji = open(utils.get_emoji_file(emoji_file), 'rb')
-            await guild.create_custom_emoji(name=emoji_name, image=emoji.read())
 
 @bot.event
 async def on_ready():
     print("Music Bot has started.")
-    await utils.create_image_assets()
     update_presence.start()
     for guild in bot.guilds:
         await GuildManager.register_guild(guild, bot)
-
-        await create_emojis(guild)
 
 @bot.event
 async def on_guild_join(guild):
     print("New Guild joined.")
     await GuildManager.register_guild(guild, bot)
-
-    await create_emojis(guild)
 
 @tasks.loop(seconds=30)
 async def update_presence():

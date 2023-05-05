@@ -34,7 +34,7 @@ class Song:
         channel = self.get_value("channel")
 
 
-        embed = discord.Embed(title=song_title, url=song_url)
+        embed = discord.Embed(title=song_title, url=song_url, color=discord.Color.magenta())
         embed.set_author(name="Added to the Playlist", icon_url=author)
         embed.set_thumbnail(url=thumbnail)
         embed.add_field(name="Channel", value=channel, inline=True)
@@ -54,7 +54,8 @@ class Song:
         likes = format(self.get_value("like_count"), ",")
         view_count = format(self.get_value("view_count"), ",")
         uploaded = utils.format_date(self.get_value("upload_date"))
-        
+        embed.set_author(name="Now Playing", icon_url="https://raw.githubusercontent.com/Jsostmann/DiscordMusicbot/main/assets/emojis/cd_spin_emoji.GIF")
+
         embed.add_field(name="Likes", value=likes, inline=False)
         embed.add_field(name="Views", value=view_count, inline=False)
         embed.add_field(name="Uploaded", value=uploaded, inline=False)

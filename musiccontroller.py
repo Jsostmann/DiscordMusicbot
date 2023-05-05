@@ -50,6 +50,7 @@ class MusicController:
         song_map = await self.bot.loop.run_in_executor(None, utils.create_youtube_song, song_url, author)
         song = Song(song_map)
         self.process_song_outer(song)
+        return song
 
     async def load(self, song: Song, author):
 
@@ -76,7 +77,9 @@ class MusicController:
 
     def process_song(self):
         #play song requested if no song is being played and the queue is empty
-        if self.is_connected() and not self.is_playing() and self.current_song:        
+        #TODO check if song is paused before trying to play anything
+
+        if self.is_connected() and not (self.is_playing() or self.is_paused()) and self.current_song:        
             self.guild.voice_client.play(discord.FFmpegPCMAudio(self.current_song.get_value('url'), before_options='-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5'), after=self.next_song_cb)
             self.guild.voice_client.source = discord.PCMVolumeTransformer(self.guild.voice_client.source, self.volume / 100.0)
             self.song_timer.start()
@@ -97,8 +100,23 @@ class MusicController:
             self.playlist.playlist[i], self.playlist.playlist[swap_index] = self.playlist.playlist[swap_index], self.playlist.playlist[i]
 
     async def loop_song(self):
-        self.playlist.loop = True if not self.playlist.loop else False
-        
+        if self.is_playlist_looping():
+           self.playlist.loop_playlist = False 
+
+        self.playlist.loop_song = True if not self.playlist.loop_song else False
+
+    async def loop_playlist(self):
+        if self.is_song_looping():
+           self.playlist.loop_song = False 
+
+        self.playlist.loop_playlist = True if not self.playlist.loop_playlist else False
+
+    def is_song_looping(self):
+        return self.playlist.loop_song
+
+    def is_playlist_looping(self):
+        return self.playlist.loop_playlist
+    
     async def stop_playlist(self):
         self.playlist.clear()
         self.stop()
@@ -141,9 +159,16 @@ class MusicController:
         self.song_timer.pause()
 
     def resume(self):
-        self.guild.voice_client.resume()
-        self.song_timer.resume()
+        if self.is_paused():
+            self.guild.voice_client.resume()
+            self.song_timer.resume()
+            return
+        
+        self.process_song()
     
+    def can_resume(self):
+        return self.is_paused() or (self.is_stopped() and not self.playlist_is_empty())
+
     def is_paused(self):
         return self.is_connected() and self.guild.voice_client.is_paused()
 

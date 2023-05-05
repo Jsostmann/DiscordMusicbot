@@ -3,6 +3,7 @@ import re
 import spotipy
 import os
 import httpx
+import discord
 from dotenv import load_dotenv
 
 
@@ -35,7 +36,8 @@ YT_DL_OPTIONS = {
 }
 
 spotify_client = None
-global asset_map
+asset_map = {}
+emoji_map = {}
 
 try:
     spotify_client_id = os.getenv("spotify_client_id")
@@ -177,6 +179,29 @@ async def create_image_assets():
         assets = await client.get(DISCORD_URL.format(DISCORD_APPLICATION_ID))
         for asset in assets.json():
             asset_map[asset['name']] = tuple(DISCORD_ASSET_URL.format(DISCORD_APPLICATION_ID, asset['id'], size) for size in [40, 128, 512])
+
+async def create_emojis(guild: discord.guild.Guild):
+    global emoji_map
+    emjoi_files = get_emoji_files()
+
+    for emoji_file in emjoi_files:
+        emoji_name = emoji_file.split('.')[0]
+        found_emoji = discord.utils.get(guild.emojis, name=emoji_name)
+
+        if not found_emoji:
+            emoji = open(get_emoji_file(emoji_file), 'rb')
+            found_emoji = await guild.create_custom_emoji(name=emoji_name, image=emoji.read())
+            
+        emoji_map[emoji_name] = found_emoji
+
+async def delete_emojis(guild: discord.guild.Guild):
+    emjoi_files = get_emoji_files()
+
+    for emoji_file in emjoi_files:
+        emoji_name = emoji_file.split('.')[0]
+        found_emoji = discord.utils.get(guild.emojis, name=emoji_name)
+        if found_emoji:
+            await guild.delete_emoji(found_emoji)
 
 def get_emoji_files():
     return os.listdir(os.path.join(os.getcwd(), "assets", "emojis"))
