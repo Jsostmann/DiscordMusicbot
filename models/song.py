@@ -1,7 +1,4 @@
-import sys
-sys.dont_write_bytecode = True
-
-import utils
+import modules.utils as utils
 import discord
 
 class Song:

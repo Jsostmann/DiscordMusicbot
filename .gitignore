@@ -2,3 +2,5 @@
 *.exe
 __pycache__/
 .cache
+cache/
+database/database.db

@@ -1,10 +1,7 @@
-import sys
-sys.dont_write_bytecode = True
-
 import discord
 from discord.ext import commands
 from guildmanager import GuildManager
-import utils
+import modules.utils as utils
 
 class Music(commands.Cog, name="Music"):
 

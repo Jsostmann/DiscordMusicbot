@@ -1,9 +1,6 @@
-import sys
-sys.dont_write_bytecode = True
-
 from collections import deque
 import discord
-import utils
+import modules.utils as utils
 
 class Playlist:
   

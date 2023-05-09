@@ -1,9 +1,6 @@
-import sys
-sys.dont_write_bytecode = True
-
 import discord
 from models.playlist import Playlist
-import utils
+import modules.utils as utils
 from models.song import Song
 import asyncio
 import concurrent.futures
@@ -80,8 +77,6 @@ class MusicController:
 
     def process_song(self):
         #play song requested if no song is being played and the queue is empty
-        #TODO check if song is paused before trying to play anything
-
         if self.is_connected() and not (self.is_playing() or self.is_paused()) and self.current_song:        
             self.guild.voice_client.play(discord.FFmpegPCMAudio(self.current_song.get_value('url'), before_options='-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5'), after=self.next_song_cb)
             self.guild.voice_client.source = discord.PCMVolumeTransformer(self.guild.voice_client.source, self.volume / 100.0)

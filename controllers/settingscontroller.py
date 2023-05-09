@@ -1,9 +1,6 @@
-import sys
-sys.dont_write_bytecode = True
-
 import discord
 from models.playlist import Playlist
-import utils
+import modules.utils as utils
 from models.song import Song
 import time
 
@@ -12,7 +9,7 @@ class SettingsController:
     def __init__(self, guild, bot):
         self.bot = bot
         self.guild = guild
-        self.cooldown_whitelist = list()
+        self.cooldown_whitelist = list([guild.owner_id])
         self.black_list = list()
         self.cooldown_map = dict()
         self.cooldown_frequency = 3
