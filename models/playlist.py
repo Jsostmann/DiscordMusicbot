@@ -69,7 +69,7 @@ class Playlist:
             return None
 
         description_str = ""
-        for i in range(0, len(self.playlist)):
+        for i in range(0, min(len(self.playlist), 10)):
             song_content = self.playlist[i].get_embed(type="playlist")
 
             if i == 0:

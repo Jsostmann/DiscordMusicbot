@@ -6,7 +6,7 @@ import asyncio
 import concurrent.futures
 import random
 from models.songtimer import Songtimer
-
+from modules import database
 class MusicController:
     
     def __init__(self, guild, bot):

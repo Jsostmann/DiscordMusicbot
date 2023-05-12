@@ -3,7 +3,7 @@ import discord
 
 class Song:
 
-    SONG_ATTRIBUTES = ["title", "requestee", "url", "webpage_url", "duration", "thumbnail", "channel" ,"like_count", "view_count", "upload_date"]
+    SONG_ATTRIBUTES = ["title", "requestee", "url", "webpage_url", "duration", "thumbnail", "channel" ,"like_count", "view_count", "upload_date", 'id']
 
     def __init__(self, raw_map):
         if raw_map:

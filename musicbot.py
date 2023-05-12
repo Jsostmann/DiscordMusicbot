@@ -8,7 +8,7 @@ import os
 from dotenv import load_dotenv
 from guildmanager import GuildManager
 import modules.database as db
-
+import modules.utils as a
 load_dotenv()
 DISCORD_TOKEN = os.getenv("discord_token")
 
@@ -18,8 +18,6 @@ bot = commands.Bot(command_prefix='-', intents=intents)
 @bot.event
 async def on_ready():
     print("Music Bot has started.")
-    await db.init_guilds(bot.guilds)
-    await db.init_guild_members(bot.guilds)
     presence_task.start()
     for guild in bot.guilds:
         await GuildManager.register_guild(guild, bot)

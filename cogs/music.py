@@ -24,9 +24,8 @@ class Music(commands.Cog, name="Music"):
                 if not utils.spotify_enabled():            
                     await ctx.send(f"{utils.emoji_map['spotify_emoji']} The bot is not setup to use spotify")
                     return
-                
                 t = music_controller.play_spotify(input, author)
-                await ctx.send(f"Playing spotify playlist {utils.emoji_map['playlist']}")
+                await ctx.send(f"Playing spotify playlist {utils.emoji_map['spotify_emoji']}")
                 await t
             else:
                 song = await music_controller.play_youtube(input, author)

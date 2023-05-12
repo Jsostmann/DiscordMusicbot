@@ -9,7 +9,7 @@ class SettingsController:
     def __init__(self, guild, bot):
         self.bot = bot
         self.guild = guild
-        self.cooldown_whitelist = list([guild.owner_id])
+        self.cooldown_whitelist = list([guild.owner.id])
         self.black_list = list()
         self.cooldown_map = dict()
         self.cooldown_frequency = 3
@@ -35,6 +35,14 @@ class SettingsController:
         
         return True
     
+    def get_remaining_cooldown(self, user_id: int) -> str:
+        if not user_id in self.cooldown_map:
+            return None
+
+        cooldown_endtime = self.cooldown_map[user_id][0] + self.cooldown_time_seconds
+        return utils.format_duration(int(cooldown_endtime - time.time()))
+        
+        
     def is_user_blacklisted(self, user_id: int) -> bool:
         return user_id in self.black_list
     

@@ -3,6 +3,7 @@ import re
 from spotipy import Spotify as SpotifyClient
 from spotipy.oauth2 import SpotifyClientCredentials
 import os
+import hashlib
 import httpx
 import discord
 from dotenv import load_dotenv
@@ -148,8 +149,7 @@ def create_youtube_song(url, author):
             return None
         
         result.update({"requestee": author})
-        for r in result:
-            print(result['id'])
+
         return result
 
 def get_url(content):
@@ -162,7 +162,9 @@ def get_url(content):
         return None
     
 def to_hash(data):
-    return abs(hash(data)) % (10 ** 8)
+    sha1 = hashlib.sha1()
+    sha1.update(data.encode('utf-8'))
+    return sha1.hexdigest()
 
 def format_duration(duration):
     mins = duration // 60
@@ -219,6 +221,20 @@ async def delete_emojis(guild: discord.guild.Guild):
 
 def get_emoji_files():
     return os.listdir(os.path.join(os.getcwd(), "assets", "emojis"))
+
+def embed_local_image(embed, file_name, embed_type=["thumbnail", "image", "author"]):
+    file_obj = os.path.join(os.getcwd(), "assets", "emojis", file_name)
+
+    match embed_type:
+        case "thumbnail":
+            embed.set_thumbnail(url=f"attachment://{file_name}")
+        case "image":
+            embed.set_image(url=f"attachment://{file_name}")
+        case "author":
+            embed.author.icon_url = f"attachment://{file_name}"
+
+    file = discord.File(file_obj, filename=file_name)
+    return file
 
 def get_emoji_file(emoji_file_name):
     return os.path.join(os.getcwd(), "assets", "emojis", emoji_file_name)
