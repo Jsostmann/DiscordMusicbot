@@ -12,6 +12,7 @@ load_dotenv()
 
 DB_SCHEMA_NAME = "schema.sql"
 DB_NAME = "database.db"
+DEFAULT_SETTINGS = lambda guild_id: [(guild_id, "cooldown-time", 120),(guild_id, "cooldown-freq", 4), (guild_id, "blacklist", True), (guild_id, "whitelist", True), (guild_id, "restart", False)]
 
 DB_PATH = os.path.join(os.getcwd(), "database", DB_NAME)
 DB_SCHEMA_PATH = os.path.join(os.getcwd(), "database", DB_SCHEMA_NAME)

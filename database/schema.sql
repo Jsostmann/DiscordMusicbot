@@ -42,3 +42,15 @@ CREATE TABLE IF NOT EXISTS `guild_settings` (
   `setting_value` TEXT NOT NULL,
   PRIMARY KEY (`guild_id`, `setting_type`)
 );
+
+CREATE TABLE IF NOT EXISTS `blacklist` (
+  `guild_user_id` INTEGER NOT NULL,
+  FOREIGN KEY(`guild_user_id`) REFERENCES `guild_user` (`id`),
+  PRIMARY KEY (`guild_user_id`)
+);
+
+CREATE TABLE IF NOT EXISTS `whitelist` (
+  `guild_user_id` INTEGER NOT NULL,
+  FOREIGN KEY(`guild_user_id`) REFERENCES `guild_user` (`id`),
+  PRIMARY KEY (`guild_user_id`)
+);
