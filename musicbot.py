@@ -8,7 +8,7 @@ import os
 from dotenv import load_dotenv
 from guildmanager import GuildManager
 import modules.database as db
-import modules.utils as a
+
 load_dotenv()
 DISCORD_TOKEN = os.getenv("discord_token")
 
@@ -21,7 +21,8 @@ async def on_ready():
     presence_task.start()
     for guild in bot.guilds:
         await GuildManager.register_guild(guild, bot)
-
+    #await GuildManager.create(bot, "bots", "bot", "bot.update")
+    
 @bot.event
 async def on_guild_join(guild):
     print("New Guild joined.")

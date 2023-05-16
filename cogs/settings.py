@@ -2,7 +2,8 @@ from discord.ext import commands
 from guildmanager import GuildManager
 from modules.decorators import *
 import discord
-from modules import utils
+from messaging.producer import Producer
+
 class Settings(commands.Cog, name="Settings"):
 
     def __init__(self, bot):
@@ -36,7 +37,8 @@ class Settings(commands.Cog, name="Settings"):
     @commands.command(name='test', help='test')
     @is_owner
     async def test(self, ctx, *args):
-        embed = discord.Embed(description="test")
+        #embed = discord.Embed(description="test")
+
         #embed.set_author(name=f'{ctx.message.author.name} favorited a song', icon_url="https://raw.githubusercontent.com/Jsostmann/DiscordMusicbot/main/assets/emojis/cd_spin_emoji.GIF")
         #embed.set_image(url='https://raw.githubusercontent.com/Jsostmann/DiscordMusicbot/main/assets/emojis/favorite.png')
         #file = utils.embed_local_image(embed, f"{input}.png", "author")
